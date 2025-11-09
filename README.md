@@ -1,11 +1,10 @@
 
-  # Ecommerce Product Review Componente
+  # Ecommerce Pulgas shop
 
-  This is a code bundle for Ecommerce Product Review Componente. The original project is available at https://www.figma.com/design/FCrC3olHOKq1iR2coCej5A/Ecommerce-Product-Review-Componente.
 
-  ## Running the code
+  ## Comandos
 
-  Run `npm i` to install the dependencies.
+  ejecutar `npm i` para instalas dependencias.
 
-  Run `npm run dev` to start the development server.
+  ejecutar `npm run dev` para el development del server.
   
