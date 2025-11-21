@@ -13,6 +13,11 @@ export type VotePayload = {
   voto: 'up' | 'down';
 };
 
+export type DeleteReviewPayload = {
+  idComprador: number;
+};
+
+
 export const ratingsService = {
   async getAverage(productId: number) {
     const { data } = await api.get(`/ratings/${productId}/average`);
@@ -51,5 +56,14 @@ export const ratingsService = {
     const { data } = await api.post(`/ratings/comments/${idResena}/vote`, payload);
     // { status: 'ok' }
     return data as { status: 'ok' };
+    
   },
+  async deleteReview(idResena: string, payload: DeleteReviewPayload) {
+  const { data } = await api.delete(`/ratings/comments/${idResena}`, {
+    data: payload,
+  });
+  // { status: 'deleted' }
+  return data as { status: 'deleted' };
+},
+
 };
