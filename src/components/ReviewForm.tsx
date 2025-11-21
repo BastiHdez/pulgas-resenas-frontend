@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
@@ -8,29 +8,46 @@ interface ReviewFormProps {
   onSubmit?: (review: string) => void;  // puede venir vacío
   disabled?: boolean;
   isLoading?: boolean;
+  initialText?: string;                 // <-- NUEVO
+  mode?: 'create' | 'edit';             // <-- NUEVO
+  onCancelEdit?: () => void;            // <-- NUEVO
 }
 
 export function ReviewForm({
   onSubmit,
   disabled = false,
-  isLoading = false
+  isLoading = false,
+  initialText = '',
+  mode = 'create',
+  onCancelEdit,
 }: ReviewFormProps) {
-  const [reviewText, setReviewText] = useState('');
+  const [reviewText, setReviewText] = useState(initialText ?? '');
   const [isFocused, setIsFocused] = useState(false);
   const [hasError, setHasError] = useState(false);
 
   const maxLength = 500;
   const remainingChars = maxLength - reviewText.length;
 
+  // Sincroniza el texto cuando cambie initialText (p.ej. al entrar en modo edición)
+  useEffect(() => {
+    setReviewText(initialText ?? '');
+    setHasError(false);
+  }, [initialText]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     // Comentario OPCIONAL: solo validamos largo máximo
     if (reviewText.length > maxLength) {
       setHasError(true);
       return;
     }
+
     setHasError(false);
     onSubmit?.(reviewText.trim()); // puede ser ''
+
+    // Después de enviar, limpiamos el textarea;
+    // el padre se encarga de salir del modo edición si corresponde.
     setReviewText('');
   };
 
@@ -52,7 +69,8 @@ export function ReviewForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="review-textarea" className="text-sm">
-          Escribe tu reseña <span className="text-muted-foreground">(opcional)</span>
+          {mode === 'edit' ? 'Edita tu reseña' : 'Escribe tu reseña'}{' '}
+          <span className="text-muted-foreground">(opcional)</span>
         </Label>
         <div className="relative">
           <Textarea
@@ -64,17 +82,20 @@ export function ReviewForm({
             onBlur={() => setIsFocused(false)}
             disabled={disabled || isLoading}
             className={cn(
-              "min-h-[120px] resize-none pr-16 transition-colors",
-              isFocused && "ring-2 ring-ring ring-offset-2",
-              hasError && "border-destructive ring-destructive",
-              disabled && "opacity-50 cursor-not-allowed"
+              'min-h-[120px] resize-none pr-16 transition-colors',
+              isFocused && 'ring-2 ring-ring ring-offset-2',
+              hasError && 'border-destructive ring-destructive',
+              disabled && 'opacity-50 cursor-not-allowed'
             )}
+            // Permitimos escribir un poco más, pero validamos contra maxLength
             maxLength={maxLength + 50}
           />
-          <div className={cn(
-            "absolute bottom-3 right-3 text-xs transition-colors",
-            getCharCountColor()
-          )}>
+          <div
+            className={cn(
+              'absolute bottom-3 right-3 text-xs transition-colors',
+              getCharCountColor()
+            )}
+          >
             {remainingChars}
           </div>
         </div>
@@ -85,21 +106,32 @@ export function ReviewForm({
         )}
       </div>
 
-      <div className="flex justify-start">
+      <div className="flex justify-start gap-2">
         <Button
           type="submit"
-          disabled={disabled || isLoading /* comentario opcional: no bloquea el botón */}
+          disabled={disabled || isLoading}
           className="w-full sm:w-auto min-w-[160px] bg-[#22c55e] hover:bg-[#16a34a] text-white"
         >
           {isLoading ? (
             <>
               <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
-              Publicando...
+              {mode === 'edit' ? 'Guardando...' : 'Publicando...'}
             </>
           ) : (
-            'Publicar'
+            mode === 'edit' ? 'Guardar cambios' : 'Publicar'
           )}
         </Button>
+
+        {mode === 'edit' && onCancelEdit && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isLoading}
+            onClick={onCancelEdit}
+          >
+            Cancelar
+          </Button>
+        )}
       </div>
     </form>
   );
